@@ -3,12 +3,12 @@ const functions = require("firebase-functions");
 const app = require("express")();
 
 const {
-  getTodayScoreboardLink,
   updateTodayScoreboardLink,
+  updateGamesToday,
 } = require("./routes/games");
 
-app.get("/games/todayScoreboardLink", getTodayScoreboardLink);
 app.put("/games/todayScoreboardLink", updateTodayScoreboardLink);
+app.put("/games/today", updateGamesToday);
 
 // Export base url with /api
 // Use asia-east2 since Hong Kong is nearest
