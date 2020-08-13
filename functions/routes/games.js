@@ -15,29 +15,6 @@ const getTodayScoreboardLink = (req, res) => {
     });
 };
 
-exports.updateTodayScoreboardLink = async (req, res) => {
-  try {
-    //Gets the Today details
-    const todayResponse = await axios.get(
-      "https://data.nba.net/10s/prod/v4/today.json"
-    );
-
-    const todayScoreboard =
-      "https://data.nba.net/10s" + todayResponse.data.links.todayScoreboard;
-
-    return db.ref().update({ todayScoreboard }, function (error) {
-      if (error) {
-        res.json({ error: error });
-      } else {
-        res.json(`todayScoreboard updated to ${todayScoreboard} successfully`);
-      }
-    });
-  } catch (e) {
-    console.log("tryCatche", e);
-    res.sendStatus(400);
-  }
-};
-
 // Game Today
 exports.updateGamesToday = async (req, res) => {
   try {
@@ -79,9 +56,12 @@ exports.updateGamesToday = async (req, res) => {
     // Updates to firebase realtime database
     return db.ref().update({ gamesToday }, function (error) {
       if (error) {
-        res.json({ error: error });
+        return res.json({ error: error });
       } else {
-        res.json({ status: "gamesToday updated successfully", gamesToday });
+        return res.json({
+          status: "gamesToday updated successfully",
+          gamesToday,
+        });
       }
     });
   } catch (e) {
