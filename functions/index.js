@@ -1,11 +1,8 @@
 const functions = require("firebase-functions");
 const axios = require("axios");
 const { db } = require("./util/db");
-const app = require("express")();
 
-//const { updateGamesToday } = require("./routes/games");
-
-exports.updateTodayScoreboardLink = functions.pubsub
+exports.updateTodayScoreboardApi = functions.pubsub
   .schedule("01 00 * * *")
   .timeZone("Asia/Singapore")
   .onRun((context) => {
@@ -17,26 +14,66 @@ exports.updateTodayScoreboardLink = functions.pubsub
         .then((todayResponse) => {
           return (
             "https://data.nba.net/10s" +
-            todayResponse.data.links.todayScoreboard
+            todayResponse.data.links.todayScoreboardApi
           );
         })
-        // Updates todayScoreboard in the Realtime Database
-        .then((todayScoreboard) => {
-          return db.ref().update({ todayScoreboard }, function (error) {
-            if (error) {
-              return { error: error };
-            } else {
-              return {
-                res: `todayScoreboard updated to ${todayScoreboard} successfully`,
-              };
-            }
-          });
+        // Updates todayScoreboardApi in the Realtime Database
+        .then((todayScoreboardApi) => {
+          return db.ref().update({ todayScoreboardApi });
         })
     );
   });
 
-//app.put("/games/today", updateGamesToday);
+exports.updateGamesToday = functions.pubsub
+  //Every minute, every hour between 00am and 13pm, of every day
+  .schedule("* 8-13 * * *")
+  .timeZone("Asia/Singapore")
+  .onRun((context) => {
+    return (
+      db
+        .ref("/todayScoreboardApi")
+        .once("value")
+        // Gets the todayScoreboardApi from db
+        .then((snapshot) => {
+          return snapshot.val();
+        })
+        // Gets today games from todayScoreboardApi
+        .then((todayScoreboardApi) => {
+          return axios.get(todayScoreboardApi);
+        })
+        // Filters only needed games data
+        .then((gamesResponse) => {
+          return gamesResponse.data.games.map((game) => {
+            const filteredGame = (({
+              clock,
+              gameId,
+              isGameActivated,
+              period,
+              hTeam: { score, triCode },
+              startTimeUTC,
+            }) => ({
+              clock,
+              gameId,
+              isGameActivated,
+              period,
+              hTeam: { score, triCode },
+              startTimeUTC,
+            }))(game);
 
-// Export base url with /api
-// Use asia-east2 since Hong Kong is nearest
-//exports.api = functions.region("asia-east2").https.onRequest(app);
+            // Deconstructs subset of vTeam (gets duplicate error if used with hTeam due to 'score')
+            const v = (({ vTeam: { score, triCode } }) => ({
+              vTeam: { score, triCode },
+            }))(game);
+
+            filteredGame.vTeam = v.vTeam;
+            delete filteredGame.period.type;
+
+            return filteredGame;
+          });
+        })
+        // Updates filtered gamesToday in the Realtime Database
+        .then((gamesToday) => {
+          return db.ref().update({ gamesToday });
+        })
+    );
+  });
