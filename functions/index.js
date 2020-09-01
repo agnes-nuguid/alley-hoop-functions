@@ -14,7 +14,7 @@ exports.updateTodayScoreboardApi = functions.pubsub
         .then((todayResponse) => {
           return (
             "https://data.nba.net/10s" +
-            todayResponse.data.links.todayScoreboardApi
+            todayResponse.data.links.todayScoreboard
           );
         })
         // Updates todayScoreboardApi in the Realtime Database

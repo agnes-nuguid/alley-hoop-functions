@@ -1,14 +1,11 @@
-const firebase = require("firebase/app");
-require("firebase/database");
+const admin = require("firebase-admin");
 
-const config = {
-  apiKey: "AIzaSyDYSuC9NSZLvz5X1jUZfRPWSBifr1sJfDk",
-  authDomain: "alley-hoop.firebaseapp.com",
+const serviceAccount = require("path/to/serviceAccountKey.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://alley-hoop.firebaseio.com",
-  storageBucket: "alley-hoop.appspot.com",
-};
+});
 
-firebase.initializeApp(config);
-
-// Get a reference to the database service
-exports.db = firebase.database();
+// Get a reference to the admin service
+exports.db = admin.database();
