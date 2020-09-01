@@ -9,3 +9,8 @@ admin.initializeApp({
 
 // Get a reference to the admin service
 exports.db = admin.database();
+
+exports.runtimeOpts = {
+  timeoutSeconds: 5,
+  memory: "128MB",
+};

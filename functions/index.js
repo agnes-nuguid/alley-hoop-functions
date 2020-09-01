@@ -1,9 +1,10 @@
 const functions = require("firebase-functions");
 const axios = require("axios");
-const { db } = require("./util/db");
+const { db, runtimeOpts } = require("./util/db");
 
-exports.updateTodayScoreboardApi = functions.pubsub
-  .schedule("01 00 * * *")
+exports.updateTodayScoreboardApi = functions
+  .runWith(runtimeOpts)
+  .pubsub.schedule("01 00 * * *")
   .timeZone("Asia/Singapore")
   .onRun((context) => {
     return (
@@ -24,9 +25,10 @@ exports.updateTodayScoreboardApi = functions.pubsub
     );
   });
 
-exports.updateGamesToday = functions.pubsub
-  //Every minute, every hour between 00am and 13pm, of every day
-  .schedule("* 8-13 * * *")
+exports.updateGamesToday = functions
+  .runWith(runtimeOpts)
+  .pubsub //Every minute, every hour between 6am-12pm, of every day
+  .schedule("* 6-12 * * *")
   .timeZone("Asia/Singapore")
   .onRun((context) => {
     return (
