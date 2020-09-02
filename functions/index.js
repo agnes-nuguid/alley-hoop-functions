@@ -1,29 +1,7 @@
 const functions = require("firebase-functions");
 const axios = require("axios");
+const dayjs = require("dayjs");
 const { db, runtimeOpts } = require("./util/db");
-
-exports.updateTodayScoreboardApi = functions
-  .runWith(runtimeOpts)
-  .pubsub.schedule("01 00 * * *")
-  .timeZone("Asia/Singapore")
-  .onRun((context) => {
-    return (
-      axios
-        // Gets the Today details
-        .get("https://data.nba.net/10s/prod/v4/today.json")
-        // Returns todayScoreboardLink
-        .then((todayResponse) => {
-          return (
-            "https://data.nba.net/10s" +
-            todayResponse.data.links.todayScoreboard
-          );
-        })
-        // Updates todayScoreboardApi in the Realtime Database
-        .then((todayScoreboardApi) => {
-          return db.ref().update({ todayScoreboardApi });
-        })
-    );
-  });
 
 exports.updateGamesToday = functions
   .runWith(runtimeOpts)
@@ -31,18 +9,13 @@ exports.updateGamesToday = functions
   .schedule("* 6-12 * * *")
   .timeZone("Asia/Singapore")
   .onRun((context) => {
+    const todayScoreboardApi = `https://data.nba.net/prod/v2/${dayjs()
+      .subtract(1, "day")
+      .format("YYYYMMDD")}/scoreboard.json`;
+
     return (
-      db
-        .ref("/todayScoreboardApi")
-        .once("value")
-        // Gets the todayScoreboardApi from db
-        .then((snapshot) => {
-          return snapshot.val();
-        })
-        // Gets today games from todayScoreboardApi
-        .then((todayScoreboardApi) => {
-          return axios.get(todayScoreboardApi);
-        })
+      axios
+        .get(todayScoreboardApi)
         // Filters only needed games data
         .then((gamesResponse) => {
           return gamesResponse.data.games.map((game) => {
