@@ -5,8 +5,8 @@ const { db, runtimeOpts } = require("./util/db");
 
 exports.updateGamesToday = functions
   .runWith(runtimeOpts)
-  .pubsub //Every minute, every hour between 6am-12pm, of every day
-  .schedule("* 6-12 * * *")
+  .pubsub //Every minute, every hour between 6am-12pm, of Pre-Season Dec 13-20
+  .schedule("* 6-12 13-20 12 *")
   .timeZone("Asia/Singapore")
   .onRun((context) => {
     const todayScoreboardApi = `https://data.nba.net/prod/v2/${dayjs()
